@@ -36,7 +36,27 @@ class WP_Discord_Post_Post_Plus {
 		$content = $this->_prepare_content( $id, $post );
 		$embed   = array();
 
-		$thread_name = str_replace("%title%", get_option( 'wp_discord_post_plus_thread_name' ), $post->post_title);
+		$thread_name = str_replace("%title%", $post->post_title, get_option( 'wp_discord_post_plus_thread_name' ));
+		$tag_mapping = get_option( 'wp_discord_post_plus_tag_mapping' );
+		$tags = [];
+		if ( ! empty( $tag_mapping ) ) { 
+			$tag_mapping = explode("\n", $tag_mapping);
+
+			$categories = strip_tags( get_the_category_list( ', ', '', $id ) );
+			if (! empty( $categories ) )
+				$categories = explode(', ', $categories);
+			// iterate through tag_mapping
+			foreach ($tag_mapping as $tag) {
+				$tag_r = explode(':', $tag);
+				if (count($tag_r) == 2) {
+					if ($tag_r[0] == "Forced" || in_array($tag_r[0], $categories)) {
+						$tags[] = trim($tag_r[1]);
+					}
+				}
+			}
+		}
+		if (count($tags) == 0 )
+			$tags = null;
 
 		if ( ! wp_discord_post_plus_is_embed_enabled() ) {
 			$embed = $this->_prepare_embed( $id, $post );
@@ -44,7 +64,7 @@ class WP_Discord_Post_Post_Plus {
 
 		$http = new WP_Discord_Post_Plus_HTTP( 'post', $id);
 
-		return $http->process($post, $content, $embed, $id, $thread_name );
+		return $http->process($post, $content, $embed, $id, $thread_name, $tags );
 	}
 
 	/**
@@ -111,7 +131,7 @@ class WP_Discord_Post_Post_Plus {
 
 		$content = str_replace(
 			array( '%title%', '%author%', '%url%', '%post_type%', '%description%' ),
-			array( esc_html( $post->post_title ), $author, get_permalink( $id ), get_post_type( $id ), $description ),
+			array( html_entity_decode( get_the_title( $id ) ), $author, get_permalink( $id ), get_post_type( $id ), $description ),
 			$message_format
 		);
 

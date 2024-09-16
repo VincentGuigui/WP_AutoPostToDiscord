@@ -230,6 +230,14 @@ class WP_Discord_Post_Plus_Admin {
 			'wp_discord_post_plus_post_settings'
 		);
 
+		add_settings_field(
+			'wp_discord_post_plus_tag_mapping',
+			esc_html__( 'Tags mapping', 'wp-discord-post-plus' ),
+			array( $this, 'print_tag_mapping_field' ),
+			'wp-discord-post-plus',
+			'wp_discord_post_plus_post_settings'
+		);
+
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_bot_username' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_avatar_url' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_bot_token' );
@@ -240,6 +248,7 @@ class WP_Discord_Post_Plus_Admin {
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_post_webhook_url' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_message_format' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_thread_name' );
+		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_tag_mapping' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_settings_webhooks_input' );
 	}
 
@@ -362,7 +371,7 @@ class WP_Discord_Post_Plus_Admin {
 			echo '</select> </div>';
 
 			echo "<div style='width:20%;display:inline-block;'> <label> Channel </label>";
-			echo "<input style='padding:5px; margin: 5px;' name='" . $chatroom_key . "' type='text' value='" . $v['chatroom'] . "'/> </div>";
+			echo "<input style='padding:5px; margin: 5px;' name='" . $chatroom_key . "' type='text' value='" . $v['chatroom'] . "' placeholder='#channel_name' /> </div>";
 
 			echo "<div style='width:50%; display:inline-block;'> <label> Webhook URL </label>";
 			echo "<input style='padding:5px; margin: 5px; width:65%;' name='" . $webhook_key . "' type='text' value='" . $v['webhook'] . "'/> </div></div>";
@@ -385,13 +394,23 @@ class WP_Discord_Post_Plus_Admin {
 	}
 
 	/**
-	 * Prints the Mention Everyone settings field.
+	 * Prints the Thread Name settings field.
 	 */
 	public function print_thread_name_field() {
-		$value = get_option( 'auto_post_to_discord_thread_name' );
+		$value = get_option( 'wp_discord_post_plus_thread_name' );
 
-		echo '<input type="text" name="auto_post_to_discord_thread_name" value="' . $value . '" placeholder="%title%" />';
+		echo '<input type="text" name="wp_discord_post_plus_thread_name" value="' . $value . '" placeholder="%title%" />';
 		echo '<span class="description">' . esc_html__( 'Thread name (for forums especially) or empty', 'auto_post_to_discord' ) . '</span>';
+	}
+
+	/**
+	 * Prints the TAgs Mapping settings field.
+	 */
+	public function print_tag_mapping_field() {
+		$value = get_option( 'wp_discord_post_plus_tag_mapping' );
+		$placeholder = "Forced:987654\r\nCategory1:12345\r\nCategory2:654321";
+		echo '<textarea style="width:500px;height:150px;" name="wp_discord_post_plus_tag_mapping" placeholder="' .  $placeholder . '">' . esc_textarea( $value ) . '</textarea><br />';
+		echo '<span class="description">' . esc_html__( 'List of categories name with their respective Tag ID from Discord. Forced means the tag will be added no matter what. One per line.', 'auto_post_to_discord' ) . '</span>';
 	}
 
 	/**
@@ -455,35 +474,7 @@ class WP_Discord_Post_Plus_Admin {
 		echo '<textarea style="width:500px;height:150px;" name="wp_discord_order_plus_message_format" placeholder="' . esc_attr( $placeholder ) . '">' . esc_textarea( $value ) . '</textarea><br />';
 		echo '<span class="description">' . esc_html__( 'Change the format of the message sent to Discord when a new order is created in WooCommerce. The available placeholders are %1$order_number%, %2$order_customer%, and %3$order_total%.', 'wp-discord-post-plus' ) . '</span>';
 	}
-
-	/**
-	 * Adds some content to the Privacy Policy default content.
-	 */
-	public function add_privacy_policy_content() {
-		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {
-			return;
-		}
-
-		$content = '';
-
-		if ( 'yes' === get_option( 'wp_discord_enabled_for_woocommerce' ) ) {
-			$content .= __( 'When you place an order on this site, we send your order details to discordapp.com.', 'wp-discord-post-plus' );
-		}
-
-		if ( 'yes' === get_option( 'wp_discord_enabled_for_jetpack_cf' ) || 'yes' === get_option( 'wp_discord_enabled_for_cf7' ) ) {
-			$content .= __( 'When you use the contact forms on this site, we send their content to discordapp.com.', 'wp-discord-post-plus' );
-		}
-
-		if ( ! empty( $content ) ) {
-			$content .= sprintf( ' ' . __( 'The discordapp.com privacy policy is <a href="%s" target="_blank">here</a>.', 'wp-discord-post-plus' ), 'https://discordapp.com/privacy' );
-		}
-
-		wp_add_privacy_policy_content(
-			'WP Discord Post Plus',
-			wp_kses_post( wpautop( $content, false ) )
-		);
-	}
-
+	
 	/**
 	 * Adds some content to the Privacy Policy default content.
 	 */

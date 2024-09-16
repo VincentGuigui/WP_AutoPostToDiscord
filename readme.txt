@@ -3,7 +3,7 @@ Contributors: Vincent Guigui
 Tags: discord, post, forum, publish, server, chat, gaming, streaming, community, blog
 Requires at least: 6.0
 Tested up to: 6.6.2
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,3 +69,6 @@ The plugin is free. There's no lock-ins or paid promotions needed. However, if y
 = 1.0.3 =
 * Auto Post to Discord branding
 * Add Thread setting
+
+= 1.0.4 =
+* Mapping from Wordpress Category name to Discord tags ID

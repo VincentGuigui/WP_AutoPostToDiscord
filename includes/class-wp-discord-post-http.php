@@ -260,7 +260,7 @@ class WP_Discord_Post_Plus_HTTP {
 	 * @param  int    $id      The post ID.
 	 * @return object;
 	 */
-	public function process($post, $content = '', $embed = array(), $id = 0, $thread_name ) {
+	public function process($post, $content = '', $embed = array(), $id = 0, $thread_name = null, $tags = null) {
 
 		if (empty($this->_webhook_url)) {
 			if ( wp_discord_post_plus_is_logging_enabled() ) {
@@ -269,7 +269,7 @@ class WP_Discord_Post_Plus_HTTP {
 			return false;
 		}
 
-		$response = $this->_send_request( $content, $embed, $thread_name );
+		$response = $this->_send_request( $content, $embed, $thread_name, $tags );
 
 		if ( ! is_wp_error( $response ) ) {
 			if ( wp_discord_post_plus_is_logging_enabled() ) {
@@ -294,15 +294,20 @@ class WP_Discord_Post_Plus_HTTP {
 	 * @return object
 	 * @access private
 	 */
-	private function _send_request( $content, $embed, $thread_name ) {
+	private function _send_request( $content, $embed, $thread_name, $tags ) {
 		$args = array(
 			'content'    => html_entity_decode( esc_html( $content ) ),
 			'username'   => esc_html( $this->get_username() ),
 			'avatar_url' => esc_url( $this->get_avatar() )
 		);
 
-		if (!empty($thread_name))
+		if ( ! empty($thread_name))
 			$args['thread_name'] = $thread_name;
+
+		if ( ! empty($tags)) {
+			$args['applied_tags'] = $tags;
+
+		}
 
 		if ( ! empty( $embed ) ) {
 			$args['embeds'] = WP_Discord_Post_plus_Formatting::get_embed( $embed );

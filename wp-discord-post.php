@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 //define version and plugin name
-define('WP_DISCORD_POST_PLUS_VERSION', '1.0.3');
+define('WP_DISCORD_POST_PLUS_VERSION', '1.0.4');
 define('WP_DISCORD_POST_PLUS_PLUGINNAME', 'Auto Post To Discord');
 
 /**
