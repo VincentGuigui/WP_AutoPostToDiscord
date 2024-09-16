@@ -97,6 +97,10 @@ class WP_Discord_Post_Plus_HTTP {
 	 */
 	public $order_id = 0;
 
+	public must_be_sent() {
+		return !empty($this->_webhook_url);
+	}
+
 	/**
 	 * Sets the  webhook URL.
 	 *
@@ -120,7 +124,7 @@ class WP_Discord_Post_Plus_HTTP {
 			}
 
 			if (count($categories) === 0) {
-				return null;
+				return false;
 			}
 			
 			if (count($post_webhooks) !==0) {
@@ -132,11 +136,10 @@ class WP_Discord_Post_Plus_HTTP {
 					}
 
 					if ($webhooks['category'] == -1 && !empty($webhooks['webhook'])) {
-						$default_url = esc_url_raw( $webhooks['webhook'] );
+						$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
+						return true;
 					}
 				}
-
-				$this->_webhook_url = $default_url;
 			}
 		}
 		
@@ -155,10 +158,10 @@ class WP_Discord_Post_Plus_HTTP {
 						}
 	
 						if ($webhooks['category'] == -1 && !empty($webhooks['webhook'])) {
-							$default_url = esc_url_raw( $webhooks['webhook'] );
+							$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
+							return true;
 						}
 					}
-					$this->_webhook_url = $default_url;
 				}
 			}
 		}
@@ -167,6 +170,7 @@ class WP_Discord_Post_Plus_HTTP {
 			//todo:: implement product
 			$this->_webhook_url = null;
 		}
+		return false;
 	}
 
 	/**
@@ -177,7 +181,6 @@ class WP_Discord_Post_Plus_HTTP {
 	public function set_context( $context ) {
 		if ( ! empty( $this->get_context() ) ) {
 			$this->_context = sanitize_key( $context );
-			$this->set_webhook_url();
 		} else {
 			$this->_context = sanitize_key( $context );
 		}

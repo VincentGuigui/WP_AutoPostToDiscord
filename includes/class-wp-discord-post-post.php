@@ -33,6 +33,9 @@ class WP_Discord_Post_Post_Plus {
 			return;
 		}
 
+		$http = new WP_Discord_Post_Plus_HTTP( 'post', $id);
+		if (!$http->must_be_sent())
+			return null;
 		$content = $this->_prepare_content( $id, $post );
 		$embed   = array();
 
@@ -62,7 +65,6 @@ class WP_Discord_Post_Post_Plus {
 			$embed = $this->_prepare_embed( $id, $post );
 		}
 
-		$http = new WP_Discord_Post_Plus_HTTP( 'post', $id);
 
 		return $http->process($post, $content, $embed, $id, $thread_name, $tags );
 	}
@@ -104,7 +106,8 @@ class WP_Discord_Post_Post_Plus {
 				error_log( sprintf( 'WP Discord Post Plus - Post %d maybe is new. _wp_discord_post_published = %s', $id, 'yes' === get_post_meta( $id, '_wp_discord_post_published', true ) ) );
 			}
 
-			return 'yes' !== get_post_meta( $id, '_wp_discord_post_published', true ) && ! wp_is_post_revision( $id );
+			return 'yes' !== get_post_meta( $id, '_wp_discord_post_published', true ) 
+			/*&& ! wp_is_post_revision( $id )*/;
 		}
 	}
 
