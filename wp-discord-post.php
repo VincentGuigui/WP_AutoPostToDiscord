@@ -10,7 +10,7 @@
  * Description: A Discord integration that sends a message or thread on your desired Discord server and channel for every new post published.
  * Based on the original plugin WP Discord Post by Nicola Mustone, which is available on the WordPress Directory.
  *
- * Version:     1.0.3
+ * Version:     1.0.5
  * Author:      VincentG
  * Author URI:  https://github.com/VincentGuigui/WP_AutoPostToDiscord
  * Text Domain: auto_post_to_discord
@@ -24,8 +24,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 //define version and plugin name
-define('WP_DISCORD_POST_PLUS_VERSION', '1.0.4');
+define('WP_DISCORD_POST_PLUS_VERSION', '1.0.5');
 define('WP_DISCORD_POST_PLUS_PLUGINNAME', 'Auto Post To Discord');
+define('WP_DISCORD_POST_PLUS_BASENAME', plugin_basename(__FILE__));
 
 /**
  * Main class of the plugin WP Discord Post. Handles the bot and the admin settings.

@@ -37,7 +37,7 @@ class WP_Discord_Post_Plus_Assets {
 			return;
 		}
 
-        	wp_register_script('wp_discord_post_plus_scripts', plugins_url('../assets/main.js', __FILE__), array( 'jquery' ), WP_DISCORD_POST_PLUS_VERSION, true);
+        wp_register_script('wp_discord_post_plus_scripts', plugins_url('../assets/main.js', __FILE__), array( 'jquery' ), WP_DISCORD_POST_PLUS_VERSION, true);
 		wp_enqueue_script( 'wp_discord_post_plus_scripts');
 		wp_enqueue_media();
 	}

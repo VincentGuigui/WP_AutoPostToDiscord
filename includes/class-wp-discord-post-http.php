@@ -97,7 +97,7 @@ class WP_Discord_Post_Plus_HTTP {
 	 */
 	public $order_id = 0;
 
-	public must_be_sent() {
+	public function must_be_sent() {
 		return !empty($this->_webhook_url);
 	}
 
@@ -114,53 +114,58 @@ class WP_Discord_Post_Plus_HTTP {
 		$woocommerce_webhooks = get_option( 'wp_discord_post_plus_settings_webhooks_input' );
 		
 		if ($context == 'post') {
-			$categories = wp_get_post_categories($id, array(
-				'fields' => 'ids',
-			));
-
-			if (!empty($_POST['wp_discord_metabox_override_channel']))
-			{
+			if (count($post_webhooks) === 0) {
+				return false;
+			}
+			if (isset($_POST['wp_discord_metabox_override_channel']) && is_numeric($_POST['wp_discord_metabox_override_channel'])) {
 				$categories = (array) $_POST['wp_discord_metabox_override_channel'];
+			}
+			else {
+				$categories = get_the_category( $id );
+				$category_ids = array();
+				foreach ($categories as $category) {
+					$category_ids[] = $category->term_id;
+				}
+				$categories = $category_ids;
 			}
 
 			if (count($categories) === 0) {
 				return false;
 			}
 			
-			if (count($post_webhooks) !==0) {
-				foreach($post_webhooks as $webhooks) {
+			foreach($post_webhooks as $webhooks) {
+				if (in_array($webhooks['category'], $categories)) {
+					$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
+					return true;
+				}
 
-					if (in_array($webhooks['category'], $categories)) {
-						$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
-						return true;
-					}
-
-					if ($webhooks['category'] == -1 && !empty($webhooks['webhook'])) {
-						$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
-						return true;
-					}
+				if ($webhooks['category'] == -1 && !empty($webhooks['webhook'])) {
+					$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
+					return true;
 				}
 			}
 		}
 		
 		if ($context == 'order') {
-			$order = wc_get_order($this->_context_id);
+			if (count($woocommerce_webhooks) === 0) {
+				return false;
+			}
+
+			$order = wc_get_order($id);
 
 			foreach ($order->get_items() as $item_id => $item_product) {
 				$product = $item_product->get_product();
 				$category_ids = $product->get_category_ids();
 
-				if (count($woocommerce_webhooks) !==0) {
-					foreach($woocommerce_webhooks as $webhooks) {
-						if (in_array($webhooks['category'], $category_ids)) {
-							$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
-							return true;
-						}
+				foreach($woocommerce_webhooks as $webhooks) {
+					if (in_array($webhooks['category'], $category_ids)) {
+						$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
+						return true;
+					}
 	
-						if ($webhooks['category'] == -1 && !empty($webhooks['webhook'])) {
-							$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
-							return true;
-						}
+					if ($webhooks['category'] == -1 && !empty($webhooks['webhook'])) {
+						$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
+						return true;
 					}
 				}
 			}
@@ -272,17 +277,25 @@ class WP_Discord_Post_Plus_HTTP {
 			return false;
 		}
 
-		$response = $this->_send_request( $content, $embed, $thread_name, $tags );
+		$response = $this->_send_request( $id, $content, $embed, $thread_name, $tags );
 
-		if ( ! is_wp_error( $response ) ) {
+		if ( ! is_wp_error( $response ) && ( $response["response"]["code"] == 200 || $response["response"]["code"] == 204)) {
 			if ( wp_discord_post_plus_is_logging_enabled() ) {
 				error_log( 'WP Discord Post Plus - Request sent.' );
+				update_post_meta( $id, 'wp_discord_response', "OK:" . print_r($response["body"], true) . print_r($response["response"], true) );
 			}
 
 			$this->_set_post_meta( $id );
 		} else {
 			if ( wp_discord_post_plus_is_logging_enabled() ) {
-				error_log( sprintf( 'WP Discord Post Plus - Request not sent. %s', $response->get_error_message() ) );
+				if (is_wp_error( $response )) {
+					update_post_meta( $id, 'wp_discord_response', "KO:" . $response->get_error_message() );
+					error_log( sprintf( 'WP Discord Post Plus - Request not sent. %s', $response->get_error_message() ) );
+				}
+				else {
+					update_post_meta( $id, 'wp_discord_response', "KO:" . print_r($response["response"], true));
+					error_log( sprintf( 'WP Discord Post Plus - Request not sent. %s', print_r($response["response"], true) ) );
+				}
 			}
 		}
 
@@ -292,12 +305,15 @@ class WP_Discord_Post_Plus_HTTP {
 	/**
 	 * Handles the HTTP request and returns a response.
 	 *
-	 * @param  string $content The content of the request
-	 * @param  array  $embed   The embed content.
+	 * @param  string $id			Id of the post
+	 * @param  string $content		The content of the request
+	 * @param  array  $embed		The embed content
+	 * @param  array  $threadname	The thread name
+	 * @param  array  $tags			List of tags
 	 * @return object
 	 * @access private
 	 */
-	private function _send_request( $content, $embed, $thread_name, $tags ) {
+	private function _send_request( $id, $content, $embed, $thread_name, $tags ) {
 		$args = array(
 			'content'    => html_entity_decode( esc_html( $content ) ),
 			'username'   => esc_html( $this->get_username() ),
@@ -331,6 +347,8 @@ class WP_Discord_Post_Plus_HTTP {
 
 		if ( wp_discord_post_plus_is_logging_enabled() ) {
 			error_log( print_r( $request, true ) );
+			update_post_meta( $id, 'wp_discord_request', print_r( $request, true ) );
+
 		}
 
 		do_action( 'wp_discord_post_plus_before_request', $request, $this->get_webhook_url() );
@@ -353,7 +371,7 @@ class WP_Discord_Post_Plus_HTTP {
 		$id = intval( $id );
 
 		if ( 0 !== $id ) {
-			return add_post_meta( $id, '_wp_discord_post_plus_published', 'yes' );
+			return update_post_meta( $id, 'wp_discord_post_published', 'yes' );
 		}
 
 		return false;

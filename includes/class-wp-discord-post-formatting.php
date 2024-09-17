@@ -44,7 +44,7 @@ class WP_Discord_Post_Plus_Formatting {
 			return '';
 		}
 
-		// Manually generate the excerpt beacuse outside of loop. Uses code from wp_trim_excerpt()
+		// Manually generate the excerpt because outside of loop. Uses code from wp_trim_excerpt()
 		$text           = strip_shortcodes( $post->post_content );
 		$text           = apply_filters( 'the_content', $text );
 		$text           = str_replace( ']]>', ']]&gt;', $text );

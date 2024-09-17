@@ -18,9 +18,22 @@ class WP_Discord_Post_Plus_Admin {
 	 * Inits the admin panel.
 	 */
 	public function __construct() {
+		add_filter(	'plugin_action_links_' . WP_DISCORD_POST_PLUS_BASENAME, array( $this, 'plugin_action_links'), 10, 4);
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_init', array( $this, 'settings_init' ) );
 		add_action( 'admin_init', array( $this, 'add_privacy_policy_content' ) );
+	}
+
+	/**
+	* Actions-Links of the Plugin
+	*
+	* @param   array   $data  Original Links
+	* @return  array   $data  modified Links
+	*/
+	public function plugin_action_links($actions, $plugin_file, $plugin_data, $context )	{
+		$settings = '<a href="options-general.php?page=wp-discord-post-plus" title="Settings">Settings</a>';
+		array_unshift($actions , $settings);
+		return $actions;
 	}
 
 	/**

@@ -32,9 +32,8 @@ class WP_Discord_Post_Post_Plus {
 		if ( ! apply_filters( 'wp_discord_post_is_new_post', $this->is_new_post( $post ), $post ) ) {
 			return;
 		}
-
-		$http = new WP_Discord_Post_Plus_HTTP( 'post', $id);
-		if (!$http->must_be_sent())
+		$http = new WP_Discord_Post_Plus_HTTP('post', $id);
+		if (!($http->must_be_sent()))
 			return null;
 		$content = $this->_prepare_content( $id, $post );
 		$embed   = array();
@@ -45,9 +44,9 @@ class WP_Discord_Post_Post_Plus {
 		if ( ! empty( $tag_mapping ) ) { 
 			$tag_mapping = explode("\n", $tag_mapping);
 
-			$categories = strip_tags( get_the_category_list( ', ', '', $id ) );
+			$categories = strip_tags( get_the_category_list( ',', '', $id ) );
 			if (! empty( $categories ) )
-				$categories = explode(', ', $categories);
+				$categories = explode(',', $categories);
 			// iterate through tag_mapping
 			foreach ($tag_mapping as $tag) {
 				$tag_r = explode(':', $tag);
@@ -103,10 +102,10 @@ class WP_Discord_Post_Post_Plus {
 			return false;
 		} else {
 			if ( wp_discord_post_plus_is_logging_enabled() ) {
-				error_log( sprintf( 'WP Discord Post Plus - Post %d maybe is new. _wp_discord_post_published = %s', $id, 'yes' === get_post_meta( $id, '_wp_discord_post_published', true ) ) );
+				error_log( sprintf( 'WP Discord Post Plus - Post %d maybe is new and wp_discord_post_published = %s', $id, 'yes' === get_post_meta( $id, 'wp_discord_post_published', true ) ) );
 			}
 
-			return 'yes' !== get_post_meta( $id, '_wp_discord_post_published', true ) 
+			return 'yes' !== get_post_meta( $id, 'wp_discord_post_published', true ) 
 			/*&& ! wp_is_post_revision( $id )*/;
 		}
 	}

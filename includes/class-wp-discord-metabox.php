@@ -19,7 +19,6 @@ class WP_Discord_Post_Plus_Metabox {
 	 */
 	public function __construct() {
         add_action('add_meta_boxes', array($this, 'custom_meta_boxes'), 10, 1);
-        add_action('save_post', array($this, 'save_post_meta'), 10, 1);
         add_action('publish_post', array($this, 'publish_post'), 20, 2);
     }
     
@@ -42,22 +41,9 @@ class WP_Discord_Post_Plus_Metabox {
 
     public function custom_meta_boxes_html($post)
     {
-        $send_flag = get_post_meta($post->ID, 'wp_discord_send_flag', true);
-        $mention_flag = get_post_meta($post->ID, 'wp_discord_mention_flag', true);
-
-        if ($send_flag === 'no') {
-            $send_checked = '';
-        } else {
-            $send_checked = 'checked="checked"';
-        }
-
         $mention_checked = '';
 
         if ( get_option( 'wp_discord_post_plus_mention_everyone' ) === 'yes' ) {
-            $mention_checked = 'checked="checked"';
-        }
-
-        if ( $mention_flag === 'yes') {
             $mention_checked = 'checked="checked"';
         }
 
@@ -66,7 +52,7 @@ class WP_Discord_Post_Plus_Metabox {
     ?>
         <div>
             <br />
-            <input id='wp_discord_metabox_send_flag' name='wp_discord_metabox_send_flag' type="checkbox" value="yes" <?php echo $send_checked; ?>>
+            <input id='wp_discord_metabox_send_flag' name='wp_discord_metabox_send_flag' type="checkbox" value="yes">
             <label for="wp_discord_metabox_send_flag">Send to Discord</label>
         </div>
     
@@ -93,52 +79,29 @@ class WP_Discord_Post_Plus_Metabox {
         endif; 
     }
 
-    public function save_post_meta($post_id)
+    public function publish_post($post_id, $post)
     {
         if (get_post_status($post_id) == 'auto-draft') {
             return;
         }
 
-        if (isset($_POST['wp_discord_metabox_send_flag'])) {
-            $value = 'yes';
-        } else {
-            $value = 'no';
+        $discord_flag = false;
+        // in case of interactive publishing 
+        if (isset($_POST['post_status']) && $_POST['post_status'] === "publish") {
+            if (isset($_POST['wp_discord_metabox_send_flag'])) {
+                $discord_flag = true;
+            }
+        } else { 
+            // non interactive publishing (eg: cron), discord metas may be empty so lets try to send it
+            // there will be a category check anyway
+            $discord_flag = true;
         }
-
-        update_post_meta(
-            $post_id,
-            'wp_discord_send_flag',
-            $value
-        );
-
-        if (isset($_POST['wp_discord_metabox_mention_flag'])) {
-            $value = 'yes';
-        } else {
-            $value = 'no';
-        }
-
-        update_post_meta(
-            $post_id,
-            'wp_discord_mention_flag',
-            $value
-        );
-    }
-
-    public function publish_post($id, $post)
-    {
-        $discord_flag = get_post_meta($id, 'wp_discord_send_flag', true);
-        $post_variable = 'no';
-
-        if (isset($_POST['wp_discord_metabox_send_flag'])) 
-        {
-            $post_variable = 'yes';
-        }
-
-        if ($discord_flag === 'yes' || $post_variable === 'yes')
-        {
-            do_action('send_post_to_discord', $id, $post);
+        
+        if ( $discord_flag ) {
+            do_action('send_post_to_discord', $post_id, $post);
         }
     }
+    
 }
 
 return new WP_Discord_Post_Plus_Metabox();
