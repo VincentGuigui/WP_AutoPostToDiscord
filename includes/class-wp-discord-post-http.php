@@ -284,8 +284,6 @@ class WP_Discord_Post_Plus_HTTP {
 				error_log( 'WP Discord Post Plus - Request sent.' );
 				update_post_meta( $id, 'wp_discord_response', "OK:" . print_r($response["body"], true) . print_r($response["response"], true) );
 			}
-
-			$this->_set_post_meta( $id );
 		} else {
 			if ( wp_discord_post_plus_is_logging_enabled() ) {
 				if (is_wp_error( $response )) {
@@ -360,20 +358,4 @@ class WP_Discord_Post_Plus_HTTP {
 		return $response;
 	}
 
-	/**
-	 * Sets the post meta for avoiding sending the request on update.
-	 *
-	 * @param  int $id The post ID.
-	 * @return bool|int
-	 * @access private
-	 */
-	private function _set_post_meta( $id ) {
-		$id = intval( $id );
-
-		if ( 0 !== $id ) {
-			return update_post_meta( $id, 'wp_discord_post_published', 'yes' );
-		}
-
-		return false;
-	}
 }

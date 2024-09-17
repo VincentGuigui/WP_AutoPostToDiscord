@@ -94,20 +94,7 @@ class WP_Discord_Post_Post_Plus {
 			);
 		}
 
-		if ( $post_date < $current_time ) {
-			if ( wp_discord_post_plus_is_logging_enabled() ) {
-				error_log( sprintf( 'WP Discord Post Plus - Post %d is not a new post. Skipping.', $id ) );
-			}
-
-			return false;
-		} else {
-			if ( wp_discord_post_plus_is_logging_enabled() ) {
-				error_log( sprintf( 'WP Discord Post Plus - Post %d maybe is new and wp_discord_post_published = %s', $id, 'yes' === get_post_meta( $id, 'wp_discord_post_published', true ) ) );
-			}
-
-			return 'yes' !== get_post_meta( $id, 'wp_discord_post_published', true ) 
-			/*&& ! wp_is_post_revision( $id )*/;
-		}
+		return 'yes';
 	}
 
 	/**
