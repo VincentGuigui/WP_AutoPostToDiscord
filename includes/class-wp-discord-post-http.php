@@ -319,8 +319,7 @@ class WP_Discord_Post_Plus_HTTP {
 		);
 
 		if ( ! empty($thread_name))
-			$args['thread_name'] = $thread_name;
-
+			$args['thread_name'] = strlen($thread_name) > 90 ? substr($thread_name,0,90)."..." : $thread_name;;
 		if ( ! empty($tags)) {
 			$args['applied_tags'] = $tags;
 
