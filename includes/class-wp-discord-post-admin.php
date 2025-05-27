@@ -220,6 +220,14 @@ class WP_Discord_Post_Plus_Admin {
 		);
 
 		add_settings_field(
+			'wp_discord_post_plus_post_types',
+			esc_html__( 'Post types', 'wp-discord-post-plus' ),
+			array( $this, 'print_post_types_field' ),
+			'wp-discord-post-plus',
+			'wp_discord_post_plus_settings'
+		);
+
+		add_settings_field(
 			'wp_discord_post_plus_post_webhook_url',
 			esc_html__( 'Webhook URL for WordPress Posts', 'wp-discord-post-plus' ),
 			array( $this, 'print_post_webhook_url_field' ),
@@ -256,8 +264,9 @@ class WP_Discord_Post_Plus_Admin {
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_bot_token' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_webhook_url' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_logging' );
-		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_mention_everyone' );
+		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_mention_everyone');
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_disable_embed' );
+		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_post_types');
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_post_webhook_url' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_message_format' );
 		register_setting( 'wp-discord-post-plus', 'wp_discord_post_plus_thread_name' );
@@ -323,6 +332,26 @@ class WP_Discord_Post_Plus_Admin {
 		echo '<input type="checkbox" name="wp_discord_post_plus_mention_everyone" value="yes"' . checked( 'yes', $value, false ) . ' />';
 		echo '<span class="description">' . esc_html__( 'Mention @everyone when sending the message to Discord.', 'wp-discord-post-plus' ) . '</span>';
 	}
+
+	/**
+	 * Prints post types selection
+	 */
+	public function print_post_types_field() {
+		$checked_post_types = get_option( 'wp_discord_post_plus_post_types', ['post'] );
+		if (!$checked_post_types || is_null($checked_post_types)) $checked_post_types = Array('post');
+
+		$post_types = array_merge(Array('post', 'page'), get_post_types( array('_builtin' => false), 'names', 'and'));
+
+		echo '<ul>';
+		foreach ($post_types as $item) {
+			$checked = array_key_exists($item, $checked_post_types);
+			$item_uc = ucwords($item);
+			echo '<li><input name="wp_discord_post_plus_post_types['. esc_attr($item) .']" type="checkbox" ' . checked(1, $checked , false) .'>' . esc_attr($item_uc). '</li>';    
+		}
+		echo '</ul>';                                              
+
+	}
+
 
 	/**
 	 * Prints the Disable embed settings field.

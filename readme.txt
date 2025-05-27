@@ -80,4 +80,6 @@ The plugin is free. There's no lock-ins or paid promotions needed. However, if y
 = 1.0.6 =
 * Truncate thread_name if longer than 90 characters (Discord limit is 100)
 
+= 1.0.7 =
+* Options to select some post types to hook for posting
 

@@ -19,21 +19,24 @@ class WP_Discord_Post_Plus_Metabox {
 	 */
 	public function __construct() {
         add_action('add_meta_boxes', array($this, 'custom_meta_boxes'), 10, 1);
-        add_action('publish_post', array($this, 'publish_post'), 20, 2);
-    }
+		$post_types = array_keys(get_option('wp_discord_post_plus_post_types', ['post']));
+		foreach ($post_types as $post_type) {
+			add_action('publish_' . $post_type, array($this, 'publish_post'), 20, 2);
+		}
+	}
     
     /**
      * Custom metabox callback
      */
     public function custom_meta_boxes()
     {
-        $screens = ['post',];
-        foreach ($screens as $screen) {
+        $post_types = array_keys(get_option('wp_discord_post_plus_post_types', ['post']));
+        foreach ($post_types as $post_type) {
             add_meta_box(
                 'wp_discord_plus_metabox',          
                 'WP Discord Plus',  
                 array($this, 'custom_meta_boxes_html'),  
-                $screen, 
+                $post_type, 
                 'side'
             );
         }
