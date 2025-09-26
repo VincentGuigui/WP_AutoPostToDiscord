@@ -14,8 +14,6 @@ jQuery(function($) {
 		$('select', $('.wp_discord_post_plus_post_webhook_url_single_section').eq(-1)).val('-1');
 		$('select', $('.wp_discord_post_plus_post_webhook_url_single_section').eq(-1)).attr('name', 'wp_discord_post_plus_post_webhook_url[' + index + '][category]');
 
-
-
 		$('.wp_discord_post_plus_post_webhook_url_single_section').eq(-1).css('display', 'none');
 		$('.wp_discord_post_plus_post_webhook_url_single_section').eq(-1).css('background', 'yellow');
 		$('.wp_discord_post_plus_post_webhook_url_single_section').eq(-1).fadeIn('slow', function(){

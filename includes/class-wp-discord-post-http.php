@@ -118,23 +118,37 @@ class WP_Discord_Post_Plus_HTTP {
 				return false;
 			}
 			if (isset($_POST['wp_discord_metabox_override_channel']) && is_numeric($_POST['wp_discord_metabox_override_channel'])) {
-				$categories = (array) $_POST['wp_discord_metabox_override_channel'];
+				$term_ids = (array) $_POST['wp_discord_metabox_override_channel'];
 			}
 			else {
-				$categories = get_the_category( $id );
-				$category_ids = array();
-				foreach ($categories as $category) {
-					$category_ids[] = $category->term_id;
+				// Get all taxonomy terms for the post, not just categories
+				$post_type = get_post_type($id);
+				$taxonomies = get_object_taxonomies($post_type, 'names');
+				$term_ids = array();
+				
+				foreach ($taxonomies as $taxonomy) {
+					$terms = get_the_terms($id, $taxonomy);
+					if ($terms && !is_wp_error($terms)) {
+						foreach ($terms as $term) {
+							$term_ids[] = $term->term_id;
+						}
+					}
 				}
-				$categories = $category_ids;
 			}
 
-			if (count($categories) === 0) {
+			if (count($term_ids) === 0) {
+				// Still check for default webhook if no terms found
+				foreach($post_webhooks as $webhooks) {
+					if ($webhooks['category'] == -1 && !empty($webhooks['webhook'])) {
+						$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
+						return true;
+					}
+				}
 				return false;
 			}
 			
 			foreach($post_webhooks as $webhooks) {
-				if (in_array($webhooks['category'], $categories)) {
+				if (in_array($webhooks['category'], $term_ids)) {
 					$this->_webhook_url = esc_url_raw( $webhooks['webhook'] );
 					return true;
 				}

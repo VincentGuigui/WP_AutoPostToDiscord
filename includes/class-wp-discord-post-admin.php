@@ -348,8 +348,9 @@ class WP_Discord_Post_Plus_Admin {
 			$item_uc = ucwords($item);
 			echo '<li><input name="wp_discord_post_plus_post_types['. esc_attr($item) .']" type="checkbox" ' . checked(1, $checked , false) .'>' . esc_attr($item_uc). '</li>';    
 		}
-		echo '</ul>';                                              
-
+		echo '</ul>';
+		
+		echo '<p><em>Note: Webhook configuration will show taxonomy terms from all selected post types.</em></p>';
 	}
 
 
@@ -368,19 +369,17 @@ class WP_Discord_Post_Plus_Admin {
 	 */
 	public function print_post_webhook_url_field() {
 		$value = get_option( 'wp_discord_post_plus_post_webhook_url' );
-
-		$product_categories = get_categories( array(
-			'orderby' => 'name',
-			'order'   => 'ASC',
-			'hide_empty' => false,
-		));
+		$enabled_post_types = get_option( 'wp_discord_post_plus_post_types', ['post'] );
+		
+		// Get terms from all taxonomies for enabled post types
+		$all_terms = $this->get_terms_for_enabled_post_types($enabled_post_types);
 
 		if ( empty( $value ) ) {
 			$value = array(
 				array(
 					'chatroom'    => 'general',
 					'webhook'     => '',
-					'category_id' => -1,
+					'category'    => -1,
 				),
 			);
 		}
@@ -396,27 +395,38 @@ class WP_Discord_Post_Plus_Admin {
 
 			echo "<div data-index='" . $count . "' class='wp_discord_post_plus_post_webhook_url_single_section' style='border: 1px solid lightgrey; padding: 10px; width: 90%; margin:20px 20px 0 0'>";
 			echo "<a href='#' onclick=\"jQuery(this).parent().remove(); return false;\" style='display: block; float: right; font-size: 10px; position: relative; top: -5px; right: 0px;text-decoration:none;'> X </a>";
-			echo "<div style='width:20%; display:inline-block;'> <label> Category </label>";
-			echo "<select name='" . $category_key . "' >";
+			
+			echo "<div style='width:20%; display:inline-block;'> <label> Taxonomy Term </label>";
+			echo "<select name='" . $category_key . "' id='category-select-{$count}'>";
 			echo "<option value='-1'> Default </option>";
 
-			if ( ! empty( $product_categories ) ) {
-				foreach ( $product_categories as $category ) {
-					$selected = '';
-					if ( $v['category'] == $category->term_id ) {
-						$selected = ' selected="selected" ';
+			// Group terms by post type and taxonomy for better organization
+			foreach ($enabled_post_types as $post_type => $enabled) {
+				if (!$enabled) continue;
+				
+				$post_type_taxonomies = $this->get_post_type_taxonomies($post_type);
+				if (empty($post_type_taxonomies)) continue;
+				
+				echo "<optgroup label='" . ucfirst($post_type) . " Terms'>";
+				foreach ($post_type_taxonomies as $taxonomy_name => $taxonomy_data) {
+					foreach ($taxonomy_data['terms'] as $term) {
+						$selected = '';
+						if (isset($v['category']) && $v['category'] == $term->term_id) {
+							$selected = ' selected="selected" ';
+						}
+						echo "<option value='" . $term->term_id . "' " . $selected . '>' . $term->name . ' (' . $taxonomy_data['label'] . ')</option>';
 					}
-					echo "<option value='" . $category->term_id . "' " . $selected . '>' . $category->name . ' </option>';
 				}
+				echo "</optgroup>";
 			}
 
 			echo '</select> </div>';
 
 			echo "<div style='width:20%;display:inline-block;'> <label> Channel </label>";
-			echo "<input style='padding:5px; margin: 5px;' name='" . $chatroom_key . "' type='text' value='" . $v['chatroom'] . "' placeholder='#channel_name' /> </div>";
+			echo "<input style='padding:5px; margin: 5px;' name='" . $chatroom_key . "' type='text' value='" . esc_attr($v['chatroom']) . "' placeholder='#channel_name' /> </div>";
 
 			echo "<div style='width:50%; display:inline-block;'> <label> Webhook URL </label>";
-			echo "<input style='padding:5px; margin: 5px; width:65%;' name='" . $webhook_key . "' type='text' value='" . $v['webhook'] . "'/> </div></div>";
+			echo "<input style='padding:5px; margin: 5px; width:65%;' name='" . $webhook_key . "' type='text' value='" . esc_attr($v['webhook']) . "'/> </div></div>";
 			$count++;
 		}
 
@@ -624,6 +634,69 @@ class WP_Discord_Post_Plus_Admin {
 				'hide_empty' => false,
 			)
 		);
+	}
+
+	/**
+	 * Get taxonomies for a specific post type
+	 */
+	private function get_post_type_taxonomies($post_type) {
+		$taxonomies = get_object_taxonomies($post_type, 'objects');
+		$taxonomy_terms = array();
+		
+		foreach ($taxonomies as $taxonomy) {
+			// Skip private taxonomies and those that are not publicly queryable
+			if (!$taxonomy->public && !$taxonomy->publicly_queryable) {
+				continue;
+			}
+			
+			$terms = get_terms(array(
+				'taxonomy'   => $taxonomy->name,
+				'hide_empty' => false,
+			));
+			
+			if (!is_wp_error($terms) && !empty($terms)) {
+				$taxonomy_terms[$taxonomy->name] = array(
+					'label' => $taxonomy->label,
+					'terms' => $terms
+				);
+			}
+		}
+		
+		return $taxonomy_terms;
+	}
+
+	/**
+	 * Get all available post types and their taxonomies
+	 */
+	private function get_all_post_types_with_taxonomies() {
+		$post_types = array_merge(array('post', 'page'), get_post_types(array('_builtin' => false), 'names', 'and'));
+		$post_types_taxonomies = array();
+		
+		foreach ($post_types as $post_type) {
+			$post_types_taxonomies[$post_type] = $this->get_post_type_taxonomies($post_type);
+		}
+		
+		return $post_types_taxonomies;
+	}
+
+	/**
+	 * Get terms for enabled post types
+	 */
+	private function get_terms_for_enabled_post_types($enabled_post_types) {
+		$all_terms = array();
+		
+		foreach ($enabled_post_types as $post_type => $enabled) {
+			if (!$enabled) continue;
+			
+			$taxonomies = $this->get_post_type_taxonomies($post_type);
+			foreach ($taxonomies as $taxonomy_name => $taxonomy_data) {
+				foreach ($taxonomy_data['terms'] as $term) {
+					$all_terms[] = $term;
+				}
+			}
+		}
+		
+		return $all_terms;
 	}
 }
 
