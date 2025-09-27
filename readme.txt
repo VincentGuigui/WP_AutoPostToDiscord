@@ -84,4 +84,4 @@ The plugin is free. There's no lock-ins or paid promotions needed. However, if y
 * Options to select some post types to hook for posting
 
 = 1.0.8 =
-* Add option to select custom category/taxonomy for channel mapping
+* Add option to select custom category/taxonomy for custom post type in channel mapping
