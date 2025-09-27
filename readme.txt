@@ -30,7 +30,7 @@ This section describes how to install the plugin and get it working.
 
 1. Upload the plugin files to the /wp-content/plugins/auto-post-to-discord directory, or install the plugin through the WordPress plugins screen directly
 2. Activate the plugin through the ‘Plugins’ screen in WordPress
-3. Go to the settings panel then ‘Auto Post to Discord’ to setup webhook URLs
+3. Go to the settings panel and ‘Auto Post to Discord’ to setup webhook URLs
 
 == Frequently Asked Questions ==
 
@@ -83,3 +83,5 @@ The plugin is free. There's no lock-ins or paid promotions needed. However, if y
 = 1.0.7 =
 * Options to select some post types to hook for posting
 
+= 1.0.8 =
+* Add option to select custom category/taxonomy for channel mapping
