@@ -1,9 +1,9 @@
-=== Auto Post to Discord ===
+=== Auto Post To Discord ===
 Contributors: Vincent Guigui
 Tags: discord, post, forum, publish, server, chat, gaming, streaming, community, blog
 Requires at least: 6.0
-Tested up to: 6.6.2
-Stable tag: 1.0.6
+Tested up to: 6.8
+Stable tag: 1.0.8
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
