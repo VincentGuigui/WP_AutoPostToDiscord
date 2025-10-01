@@ -3,7 +3,7 @@ Contributors: Vincent Guigui
 Tags: discord, post, forum, publish, server, chat, gaming, streaming, community, blog
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,3 +85,6 @@ The plugin is free. There's no lock-ins or paid promotions needed. However, if y
 
 = 1.0.8 =
 * Add option to select custom category/taxonomy for custom post type in channel mapping
+
+= 1.0.9 =
+* Fix: taxonomy extraction during post

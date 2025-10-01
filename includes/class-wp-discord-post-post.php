@@ -43,16 +43,20 @@ class WP_Discord_Post_Post_Plus {
 		$tags = [];
 		if ( ! empty( $tag_mapping ) ) { 
 			$tag_mapping = explode("\n", $tag_mapping);
-
-			$categories = strip_tags( get_the_category_list( ',', '', $id ) );
-			if (! empty( $categories ) )
-				$categories = explode(',', $categories);
-			// iterate through tag_mapping
-			foreach ($tag_mapping as $tag) {
-				$tag_r = explode(':', $tag);
-				if (count($tag_r) == 2) {
-					if ($tag_r[0] == "Forced" || in_array($tag_r[0], $categories)) {
-						$tags[] = trim($tag_r[1]);
+			$taxonomies = get_object_taxonomies(get_post_type( $id ), 'objects');
+			if (count($taxonomies) > 0) {
+				$taxonomy = array_key_first($taxonomies);
+				$categories = strip_tags( get_the_term_list( $id, $taxonomy, '', ',' ) );
+				if (! empty( $categories ) ) {
+					$categories = explode(',', $categories);
+					// iterate through tag_mapping
+					foreach ($tag_mapping as $tag) {
+						$tag_r = explode(':', $tag);
+						if (count($tag_r) == 2) {
+							if ($tag_r[0] == "Forced" || in_array($tag_r[0], $categories)) {
+								$tags[] = trim($tag_r[1]);
+							}
+						}
 					}
 				}
 			}
